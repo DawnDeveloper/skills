@@ -9,12 +9,10 @@ from pathlib import Path
 
 try:
     from chapter_paths import volume_num_for_chapter
-except ImportError:  # pragma: no cover
+except ImportError: # pragma: no cover
     from scripts.chapter_paths import volume_num_for_chapter
 
-
 _CHAPTER_RANGE_RE = re.compile(r"^\s*(\d+)\s*-\s*(\d+)\s*$")
-
 
 def _parse_chapters_range(value: object) -> tuple[int, int] | None:
     if not isinstance(value, str):
@@ -30,7 +28,6 @@ def _parse_chapters_range(value: object) -> tuple[int, int] | None:
     if start <= 0 or end <= 0 or start > end:
         return None
     return start, end
-
 
 def volume_num_for_chapter_from_state(project_root: Path, chapter_num: int) -> int | None:
     state_path = project_root / ".webnovel" / "state.json"
@@ -71,7 +68,6 @@ def volume_num_for_chapter_from_state(project_root: Path, chapter_num: int) -> i
 
     return best[1] if best else None
 
-
 def _find_split_outline_file(outline_dir: Path, chapter_num: int) -> Path | None:
     patterns = [
         f"第{chapter_num}章*.md",
@@ -85,7 +81,6 @@ def _find_split_outline_file(outline_dir: Path, chapter_num: int) -> Path | None
             return matches[0]
     return None
 
-
 def _find_volume_outline_file(project_root: Path, chapter_num: int) -> Path | None:
     outline_dir = project_root / "大纲"
     volume_num = volume_num_for_chapter_from_state(project_root, chapter_num) or volume_num_for_chapter(chapter_num)
@@ -95,7 +90,6 @@ def _find_volume_outline_file(project_root: Path, chapter_num: int) -> Path | No
         outline_dir / f"第{volume_num}卷 详细大纲.md",
     ]
     return next((path for path in candidates if path.exists()), None)
-
 
 def _extract_outline_section(content: str, chapter_num: int) -> str | None:
     patterns = [
@@ -107,10 +101,8 @@ def _extract_outline_section(content: str, chapter_num: int) -> str | None:
             return match.group(0).strip()
     return None
 
-
 def load_chapter_outline(project_root: Path, chapter_num: int, max_chars: int | None = 1500) -> str:
     outline_dir = project_root / "大纲"
-
     split_outline = _find_split_outline_file(outline_dir, chapter_num)
     if split_outline is not None:
         return split_outline.read_text(encoding="utf-8")
@@ -118,11 +110,9 @@ def load_chapter_outline(project_root: Path, chapter_num: int, max_chars: int | 
     volume_outline = _find_volume_outline_file(project_root, chapter_num)
     if volume_outline is None:
         return f"⚠️ 大纲文件不存在：第 {chapter_num} 章"
-
     outline = _extract_outline_section(volume_outline.read_text(encoding="utf-8"), chapter_num)
     if outline is None:
         return f"⚠️ 未找到第 {chapter_num} 章的大纲"
-
     if max_chars and len(outline) > max_chars:
         return outline[:max_chars] + "\n...(已截断)"
     return outline
